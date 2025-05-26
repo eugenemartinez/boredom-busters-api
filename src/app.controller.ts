@@ -5,12 +5,12 @@ import { AppService } from './app.service.js';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  @Get()
-  getHello(): string {
-    return this.appService.getHello();
-  }
+  // @Get() // Comment out or change path e.g. @Get('hello')
+  // getHello(): string {
+  //   return this.appService.getHello();
+  // }
 
-  @Get('ping') // Add this new route
+  @Get('ping')
   getPong(): string {
     return 'pong';
   }
