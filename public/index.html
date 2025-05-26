@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BoredomBusters API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px 40px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        p {
+            font-size: 1.1em;
+            margin-bottom: 20px;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .api-docs-link {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .api-docs-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+        .docs-note { /* New style for the note paragraph */
+            margin-top: 30px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to the BoredomBusters API!</h1>
+        <p>Your go-to source for finding exciting activities to combat boredom.</p>
+        <p>This API is built with NestJS and is ready to serve your requests.</p>
+        <!-- 
+            Later, when your Swagger docs are available (e.g., at /api/api-docs or /api-docs if you adjust vercel.json),
+            you can link to them here.
+            For now, the link might not work until Swagger is deployed and accessible.
+        -->
+        <a href="/api/api-docs" class="api-docs-link">View API Documentation</a>
+        <p class="docs-note"> <!-- Apply the new class here -->
+            (Note: API documentation link will be active once deployed and configured.)
+        </p>
+    </div>
+</body>
+</html>
