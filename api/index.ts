@@ -88,11 +88,18 @@ async function bootstrapNestAppForVercel(): Promise<express.Express> {
       ],
       swaggerOptions: { persistAuthorization: true, docExpansion: 'list', filter: true, showRequestDuration: true },
     };
-    // The path for Swagger setup should be relative to the global prefix if one is set.
-    // If apiPrefix is '/api', then swagger will be at '/api/docs-vercel'
-    const swaggerPathForVercel = 'docs-vercel'; // Or just 'docs' if you want it at /api/docs
-    SwaggerModule.setup(swaggerPathForVercel, nestAppInstance, document, customOptions);
-    Logger.log(`Vercel: Swagger UI potentially available at ${apiPrefix}/${swaggerPathForVercel}`, 'VercelBootstrap');
+
+    // Construct the full path for Swagger, including the apiPrefix
+    const swaggerPathSegment = 'docs';
+    const fullSwaggerPathForVercel = apiPrefix ? `${apiPrefix}/${swaggerPathSegment}` : `/${swaggerPathSegment}`;
+    // Ensure the path doesn't start with multiple slashes if apiPrefix is empty
+    const normalizedFullSwaggerPath = fullSwaggerPathForVercel.replace(/^\/+/, '/');
+
+
+    SwaggerModule.setup(normalizedFullSwaggerPath, nestAppInstance, document, customOptions);
+    Logger.log(`Vercel: Swagger UI available at ${normalizedFullSwaggerPath}`, 'VercelBootstrap');
+    // Also log the JSON spec URL
+    Logger.log(`Vercel: OpenAPI (JSON) spec available at ${normalizedFullSwaggerPath}-json`, 'VercelBootstrap');
   }
 
 
