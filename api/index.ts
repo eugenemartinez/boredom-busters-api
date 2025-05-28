@@ -1,8 +1,10 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from '../src/app.module.js'; // Adjusted for ESM and relative path
+import { AppModule } from '../src/app.module.js';
 import { ExpressAdapter } from '@nestjs/platform-express';
-import express from 'express'; // Vercel typically needs Express for NestJS
-import { INestApplication } from '@nestjs/common';
+import express from 'express';
+import { INestApplication, Logger, ValidationPipe } from '@nestjs/common'; // Added Logger, ValidationPipe
+import { ConfigService } from '@nestjs/config'; // Added ConfigService
+import { SwaggerModule, DocumentBuilder, SwaggerCustomOptions } from '@nestjs/swagger'; // Added Swagger
 
 // This will hold the initialized NestJS application instance (via its Express adapter)
 let expressApp: express.Express | undefined;
@@ -14,11 +16,85 @@ async function bootstrapNestAppForVercel(): Promise<express.Express> {
   const nestAppInstance: INestApplication = await NestFactory.create(
     AppModule,
     new ExpressAdapter(newExpressApp), // Use the Express adapter
+    { logger: ['error', 'warn', 'log', 'debug', 'verbose'] } // Ensure logs are captured
   );
 
-  nestAppInstance.enableCors(); // Enable CORS - configure as needed
-  // Add any other NestJS app configurations here that are specific to Vercel
-  // e.g., global pipes, interceptors, if they differ from local setup
+  const configService = nestAppInstance.get(ConfigService); // Get ConfigService
+
+  // --- APPLY GLOBAL PREFIX FROM ENVIRONMENT ---
+  const apiPrefix = configService.get<string>('API_PREFIX', ''); // Default to empty if not set
+  if (apiPrefix) {
+    nestAppInstance.setGlobalPrefix(apiPrefix);
+    Logger.log(`Vercel: Global API prefix set to: ${apiPrefix}`, 'VercelBootstrap');
+  } else {
+    Logger.log(`Vercel: No API_PREFIX found or it's empty. No global prefix set.`, 'VercelBootstrap');
+  }
+  // --- END APPLY GLOBAL PREFIX ---
+
+  // Apply global pipes (mirroring main.ts for consistency)
+  nestAppInstance.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
+    }),
+  );
+
+  // Apply CORS (mirroring main.ts for consistency)
+  const corsAllowedOrigins = configService.get<string>('CORS_ALLOWED_ORIGINS');
+  if (corsAllowedOrigins === '*') {
+    nestAppInstance.enableCors();
+    Logger.log('Vercel: CORS enabled for all origins (*)', 'VercelBootstrap');
+  } else if (corsAllowedOrigins) {
+    nestAppInstance.enableCors({
+      origin: corsAllowedOrigins.split(','),
+      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+      credentials: true,
+    });
+    Logger.log(
+      `Vercel: CORS enabled for specific origins: ${corsAllowedOrigins}`,
+      'VercelBootstrap',
+    );
+  } else {
+     nestAppInstance.enableCors({ origin: false }); // Restrictive default
+    Logger.log(
+      'Vercel: CORS_ALLOWED_ORIGINS not set. CORS is highly restricted.',
+      'VercelBootstrap',
+    );
+  }
+
+  // Optional: Setup Swagger for Vercel if needed, but ensure paths are correct
+  // Be mindful that `app.listen` is not called here. Swagger setup might need adjustments
+  // if it relies on the server being fully "listened".
+  // For Vercel, often Swagger is disabled or handled differently.
+  // If you enable it, ensure the swaggerPath correctly considers the apiPrefix.
+  if (configService.get<string>('NODE_ENV') !== 'test') { // Avoid Swagger in tests
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('Boredom Busters API (Vercel)')
+      .setDescription('API for discovering and managing fun activities - Vercel Instance.')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
+    const document = SwaggerModule.createDocument(nestAppInstance, swaggerConfig);
+    const customOptions: SwaggerCustomOptions = {
+      customSiteTitle: 'Boredom Busters API Docs (Vercel)',
+      customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui.min.css',
+      customJs: [
+        'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui-bundle.js',
+        'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.17.14/swagger-ui-standalone-preset.js',
+      ],
+      swaggerOptions: { persistAuthorization: true, docExpansion: 'list', filter: true, showRequestDuration: true },
+    };
+    // The path for Swagger setup should be relative to the global prefix if one is set.
+    // If apiPrefix is '/api', then swagger will be at '/api/docs-vercel'
+    const swaggerPathForVercel = 'docs-vercel'; // Or just 'docs' if you want it at /api/docs
+    SwaggerModule.setup(swaggerPathForVercel, nestAppInstance, document, customOptions);
+    Logger.log(`Vercel: Swagger UI potentially available at ${apiPrefix}/${swaggerPathForVercel}`, 'VercelBootstrap');
+  }
+
 
   await nestAppInstance.init(); // Initialize the NestJS application
   return newExpressApp; // Return the configured Express app
@@ -36,9 +112,9 @@ async function ensureNestAppIsReady() {
         'Failed to bootstrap NestJS application for Vercel:',
         error,
       );
-      isNestAppReady = false; // Ensure it retries if bootstrap fails
+      isNestAppReady = false; 
       expressApp = undefined;
-      throw error; // Re-throw to be caught by the handler
+      throw error; 
     }
   }
 }
@@ -49,17 +125,17 @@ export default async (req: express.Request, res: express.Response) => {
     await ensureNestAppIsReady();
 
     if (expressApp) {
-      expressApp(req, res); // Forward requests to the Express server (which NestJS uses)
+      expressApp(req, res); 
     } else {
-      // This case should ideally not be reached if ensureNestAppIsReady throws on failure
+      
       console.error(
         'NestJS Express app instance is not available in Vercel handler after bootstrap attempt.',
       );
       res.writeHead(500, { 'Content-Type': 'text/plain' });
-      res.end('Internal Server Error: Application not initialized.');
+      res.end('Internal ServerError: Application not initialized.');
     }
   } catch (error) {
-    // Error during ensureNestAppIsReady or if expressApp somehow fails
+    
     console.error('Error in Vercel handler for NestJS:', error);
     res.writeHead(500, { 'Content-Type': 'text/plain' });
     res.end('Internal Server Error: Handler failed.');
