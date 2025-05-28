@@ -3,74 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BoredomBusters API</title>
+    <title>BoredomBusters API Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* Custom font (optional, Tailwind uses system fonts by default) */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
         body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-            color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            text-align: center;
+            font-family: 'Poppins', sans-serif;
         }
-        .container {
-            background-color: #fff;
-            padding: 30px 40px;
-            border-radius: 8px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+
+        /* Initial states for animations (to be toggled by JS) */
+        .initial-hidden {
+            opacity: 0;
+            transform: translateY(20px);
         }
-        h1 {
-            color: #333;
-            margin-bottom: 10px;
+        /* Transition classes */
+        .fade-in-up {
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
         }
-        p {
-            font-size: 1.1em;
-            margin-bottom: 20px;
+
+        .button-interactive {
+            transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out, box-shadow 0.3s ease-in-out;
         }
-        a {
-            color: #007bff;
-            text-decoration: none;
+        .button-interactive:hover {
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
         }
-        a:hover {
-            text-decoration: underline;
+        .button-interactive:active {
+            transform: translateY(0px) scale(1);
         }
-        .api-docs-link {
-            display: inline-block;
-            margin-top: 15px;
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            border-radius: 5px;
-            font-weight: bold;
+
+        /* Subtle pulse for the heading - Updated color */
+        @keyframes pulse-text {
+            0%, 100% { text-shadow: 0 0 5px rgba(192, 132, 252, 0.3); } /* Light purple shadow */
+            50% { text-shadow: 0 0 20px rgba(192, 132, 252, 0.7); } /* Brighter purple shadow */
         }
-        .api-docs-link:hover {
-            background-color: #0056b3;
-            text-decoration: none;
-        }
-        .docs-note { /* New style for the note paragraph */
-            margin-top: 30px;
-            font-size: 0.9em;
+        .title-pulse {
+            animation: pulse-text 3s infinite ease-in-out;
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1>Welcome to the BoredomBusters API!</h1>
-        <p>Your go-to source for finding exciting activities to combat boredom.</p>
-        <p>This API is built with NestJS and is ready to serve your requests.</p>
-        <!-- 
-            Later, when your Swagger docs are available (e.g., at /api/api-docs or /api-docs if you adjust vercel.json),
-            you can link to them here.
-            For now, the link might not work until Swagger is deployed and accessible.
-        -->
-        <a href="/api/api-docs" class="api-docs-link">View API Documentation</a>
-        <p class="docs-note"> <!-- Apply the new class here -->
-            (Note: API documentation link will be active once deployed and configured.)
-        </p>
+<body class="bg-gradient-to-br from-slate-900 to-slate-800 text-slate-100 min-h-screen flex flex-col items-center justify-center p-4 antialiased">
+
+    <div id="main-content" class="initial-hidden bg-slate-800/70 backdrop-blur-md p-8 sm:p-12 rounded-xl shadow-2xl w-full max-w-2xl text-center border border-slate-700">
+        <header class="mb-8">
+            <h1 class="text-4xl sm:text-5xl font-bold mb-3 title-pulse">
+                <span class="bg-clip-text text-transparent bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500">
+                    BoredomBusters API
+                </span>
+            </h1>
+            <p class="text-slate-300 text-lg sm:text-xl">Your portal to endless activities & fun!</p>
+        </header>
+
+        <main class="mb-8">
+            <p class="text-slate-400 mb-2">
+                This API, built with the power of NestJS, is your gateway to discovering, creating, and managing activities.
+            </p>
+            <p class="text-slate-400">
+                Dive into the documentation to explore all available endpoints.
+            </p>
+        </main>
+
+        <footer class="mt-6 space-y-4 sm:space-y-0 sm:flex sm:flex-wrap sm:justify-center sm:gap-4">
+            <a href="/api/docs" 
+               class="button-interactive inline-block px-8 py-3 bg-purple-600 text-white font-semibold rounded-lg shadow-lg hover:bg-purple-700 focus:outline-none focus:ring-4 focus:ring-purple-500 focus:ring-opacity-50">
+                Explore API Documentation
+            </a>
+            <a href="https://github.com/eugenemartinez/boredom-busters-api" 
+               target="_blank" rel="noopener noreferrer"
+               class="button-interactive inline-block px-8 py-3 bg-pink-600 text-white font-semibold rounded-lg shadow-lg hover:bg-pink-700 focus:outline-none focus:ring-4 focus:ring-pink-500 focus:ring-opacity-50">
+                View on GitHub
+            </a>
+            <p id="docs-note" class="initial-hidden mt-6 text-sm text-slate-500 w-full sm:w-auto">
+                (The API documentation will guide you through all features.)
+            </p>
+        </footer>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const mainContent = document.getElementById('main-content');
+            const docsNote = document.getElementById('docs-note');
+
+            // Trigger entrance animation for the main card
+            if (mainContent) {
+                setTimeout(() => { // Slight delay for effect
+                    mainContent.classList.add('fade-in-up');
+                    mainContent.classList.remove('initial-hidden');
+                }, 100);
+            }
+
+            // Trigger entrance animation for the docs note after main content
+            if (docsNote) {
+                 setTimeout(() => {
+                    docsNote.classList.add('fade-in-up');
+                    docsNote.classList.remove('initial-hidden');
+                }, 700); // Delay after main content
+            }
+        });
+    </script>
+
 </body>
 </html>
